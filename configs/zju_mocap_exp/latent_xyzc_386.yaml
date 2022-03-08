@@ -18,4 +18,4 @@ test_dataset:
     split: 'test'
 
 # data options
-num_train_frame: 300
+num_train_frame: 346

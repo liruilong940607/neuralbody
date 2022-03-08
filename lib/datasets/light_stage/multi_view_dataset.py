@@ -9,7 +9,7 @@ import cv2
 from lib.config import cfg
 from lib.utils.if_nerf import if_nerf_data_utils as if_nerf_dutils
 from plyfile import PlyData
-
+import math
 
 class Dataset(data.Dataset):
     def __init__(self, data_root, human, ann_file, split):
@@ -29,25 +29,50 @@ class Dataset(data.Dataset):
             view = [0]
 
         # prepare input images
-        i = 0
-        i = i + cfg.begin_ith_frame
-        i_intv = cfg.frame_interval
-        ni = cfg.num_train_frame
+        # i = 0
+        # i = i + cfg.begin_ith_frame
+        # i_intv = cfg.frame_interval
+        # ni = cfg.num_train_frame
+        # if cfg.test_novel_pose:
+        #     i = (i + cfg.num_train_frame) * i_intv
+        #     ni = cfg.num_novel_pose_frame
+        #     if self.human == 'CoreView_390':
+        #         i = 0
+
         if cfg.test_novel_pose:
-            i = (i + cfg.num_train_frame) * i_intv
-            ni = cfg.num_novel_pose_frame
-            if self.human == 'CoreView_390':
-                i = 0
+            self.frame_list = np.loadtxt(
+                os.path.join(data_root, "splits/val_ood.txt"), dtype=int
+            ).tolist()  
+        elif cfg.test_novel_ind_pose:
+            self.frame_list = np.loadtxt(
+                os.path.join(data_root, "splits/val_ind.txt"), dtype=int
+            ).tolist() 
+        else:
+            self.frame_list = np.loadtxt(
+                os.path.join(data_root, "splits/train.txt"), dtype=int
+            ).tolist()  
+        annots['ims'] = [annots['ims'][i] for i in self.frame_list]
 
         self.ims = np.array([
             np.array(ims_data['ims'])[view]
-            for ims_data in annots['ims'][i:i + ni * i_intv][::i_intv]
+            # for ims_data in annots['ims'][i:i + ni * i_intv][::i_intv]
+            for ims_data in annots['ims']
         ]).ravel()
         self.cam_inds = np.array([
             np.arange(len(ims_data['ims']))[view]
-            for ims_data in annots['ims'][i:i + ni * i_intv][::i_intv]
+            # for ims_data in annots['ims'][i:i + ni * i_intv][::i_intv]
+            for ims_data in annots['ims']
         ]).ravel()
         self.num_cams = len(view)
+
+        if split != "train":
+            eval_render_every = math.ceil(len(self.ims) / 400)
+            self.ims = self.ims[::eval_render_every]
+            self.cam_inds = self.cam_inds[::eval_render_every]
+            
+        print ("num of frames", len(self.frame_list))
+        print ("num of cameras", self.num_cams)
+        print ("num of images:", len(self.ims))
 
         self.nrays = cfg.N_rand
 
@@ -166,7 +191,8 @@ class Dataset(data.Dataset):
         }
 
         R = cv2.Rodrigues(Rh)[0].astype(np.float32)
-        latent_index = frame_index - cfg.begin_ith_frame
+        # latent_index = frame_index - cfg.begin_ith_frame
+        latent_index = self.frame_list.index(frame_index)
         if cfg.test_novel_pose:
             latent_index = cfg.num_train_frame - 1
         meta = {

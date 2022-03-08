@@ -97,7 +97,7 @@ cfg.test.epoch = -1
 cfg.test.sampler = 'default'
 cfg.test.batch_sampler = 'default'
 cfg.test.sampler_meta = CN({'min_hw': [480, 640], 'max_hw': [480, 640], 'strategy': 'origin'})
-cfg.test.frame_sampler_interval = 30
+cfg.test.frame_sampler_interval = 1
 
 # trained model
 cfg.trained_model_dir = 'data/trained_model'
@@ -113,6 +113,7 @@ cfg.result_dir = 'data/result'
 # evaluation
 cfg.skip_eval = False
 cfg.test_novel_pose = False
+cfg.test_novel_ind_pose = False
 cfg.novel_pose_ni = 100
 cfg.vis_novel_pose = False
 cfg.vis_novel_view = False

@@ -27,7 +27,13 @@ class Evaluator:
             img_pred = img_pred[y:y + h, x:x + w]
             img_gt = img_gt[y:y + h, x:x + w]
 
-        result_dir = os.path.join(cfg.result_dir, 'comparison')
+        if cfg.test_novel_pose:
+            result_dir = os.path.join(cfg.result_dir, 'val_ood')
+        elif cfg.test_novel_ind_pose:
+            result_dir = os.path.join(cfg.result_dir, 'val_ind')
+        else:
+            result_dir = os.path.join(cfg.result_dir, 'val_view')
+
         os.system('mkdir -p {}'.format(result_dir))
         frame_index = batch['frame_index'].item()
         view_index = batch['cam_ind'].item()
@@ -39,6 +45,11 @@ class Evaluator:
             '{}/frame{:04d}_view{:04d}_gt.png'.format(result_dir, frame_index,
                                                       view_index),
             (img_gt[..., [2, 1, 0]] * 255))
+        if not cfg.eval_whole_img:
+            cv2.imwrite(
+                '{}/frame{:04d}_view{:04d}_mask_at_box.png'.format(result_dir, frame_index,
+                                                                    view_index),
+                (mask_at_box * 255).astype(np.uint8))
 
         # compute the ssim
         ssim = compare_ssim(img_pred, img_gt, multichannel=True)
