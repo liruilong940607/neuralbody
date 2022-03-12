@@ -24,7 +24,10 @@ class Dataset(data.Dataset):
 
         num_cams = len(self.cams['K'])
         test_view = [i for i in range(num_cams) if i not in cfg.training_view]
-        view = cfg.training_view if split == 'train' else test_view
+        if cfg.test_sequence:
+            view = [14] if human == "CoreView_386" else [1]
+        else:
+            view = cfg.training_view if split == 'train' else test_view
         if len(view) == 0:
             view = [0]
 
@@ -38,8 +41,11 @@ class Dataset(data.Dataset):
         #     ni = cfg.num_novel_pose_frame
         #     if self.human == 'CoreView_390':
         #         i = 0
-
-        if cfg.test_novel_pose:
+        if cfg.test_sequence:
+             self.frame_list = np.loadtxt(
+                os.path.join(data_root, "splits/test.txt"), dtype=int
+            ).tolist() 
+        elif cfg.test_novel_pose:
             self.frame_list = np.loadtxt(
                 os.path.join(data_root, "splits/val_ood.txt"), dtype=int
             ).tolist()  
@@ -65,7 +71,7 @@ class Dataset(data.Dataset):
         ]).ravel()
         self.num_cams = len(view)
 
-        if split != "train":
+        if split != "train" and (not cfg.test_sequence):
             eval_render_every = math.ceil(len(self.ims) / 400)
             self.ims = self.ims[::eval_render_every]
             self.cam_inds = self.cam_inds[::eval_render_every]

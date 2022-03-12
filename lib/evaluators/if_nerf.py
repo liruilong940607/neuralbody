@@ -27,7 +27,9 @@ class Evaluator:
             img_pred = img_pred[y:y + h, x:x + w]
             img_gt = img_gt[y:y + h, x:x + w]
 
-        if cfg.test_novel_pose:
+        if cfg.test_sequence:
+            result_dir = os.path.join(cfg.result_dir, 'test')
+        elif cfg.test_novel_pose:
             result_dir = os.path.join(cfg.result_dir, 'val_ood')
         elif cfg.test_novel_ind_pose:
             result_dir = os.path.join(cfg.result_dir, 'val_ind')

@@ -112,6 +112,7 @@ cfg.result_dir = 'data/result'
 
 # evaluation
 cfg.skip_eval = False
+cfg.test_sequence = False
 cfg.test_novel_pose = False
 cfg.test_novel_ind_pose = False
 cfg.novel_pose_ni = 100
